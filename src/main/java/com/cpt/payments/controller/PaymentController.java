@@ -1,5 +1,7 @@
 package com.cpt.payments.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +18,8 @@ import com.cpt.payments.util.TransactionMapper;
 @RestController
 @RequestMapping(Endpoints.PAYMENTS)
 public class PaymentController {
-	
+	private static final Logger LOGGER = LogManager.getLogger(PaymentController.class);
+
    
    @Autowired
    TransactionMapper transactionMapper;
@@ -30,11 +33,12 @@ public class PaymentController {
 		
 		//Transaction texDTO =  modelMapper.map(transactionReqRes, Transaction.class);
 		
-		//System.out.println("Convaerted to textDTO:" + texDTO);
+		//System.out.println(" payment request is -> " + transactionReqRes);
+		LOGGER.debug(" payment request is -> " + transactionReqRes);
 		
-		System.out.println(" payment request is -> " + transactionReqRes);
 		Transaction transaction = transactionMapper.toDTO(transactionReqRes);
-		System.out.println("Convaerted to textDTO:" + transaction);
+		//System.out.println("Convaerted to textDTO:" + transaction);
+		LOGGER.info("Convaerted to textDTO:" + transaction);
 		
          Transaction response = paymentStatusService.updatePaymentStatus(transaction);
 //        

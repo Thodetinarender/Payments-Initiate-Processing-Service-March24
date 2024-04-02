@@ -33,9 +33,9 @@ public class PaymentStatusServiceImpl implements PaymentStatusService {
 		if(statusHndler == null) {
 			System.out.println(" invalid transaction handler -> " + transaction.getTxnStatusId());
 			
-//			throw new PaymentProcessingException(HttpStatus.INTERNAL_SERVER_ERROR,
-//					ErrorCodeEnum.TRANSACTION_STATUS_HANDLER_NOT_FOUND.getErrorCode(),
-//					ErrorCodeEnum.TRANSACTION_STATUS_HANDLER_NOT_FOUND.getErrorMessage());
+			throw new PaymentProcessingException(HttpStatus.INTERNAL_SERVER_ERROR,
+					ErrorCodeEnum.TRANSACTION_STATUS_HANDLER_NOT_FOUND.getErrorCode(),
+					ErrorCodeEnum.TRANSACTION_STATUS_HANDLER_NOT_FOUND.getErrorMessage());
 		}
 		
 		boolean isUpdated = statusHndler.updateStatus(transaction); 

@@ -7,7 +7,8 @@ public enum TransactionStatusEnum {
 	CREATED(1,"CREATED"),
 	PENDING(2,"PENDING"),
 	APPROVED(3,"APPROVED"),
-	FAILED(4,"FAILED");
+	FAILED(4,"FAILED"),
+	INITIATED(5, "INITIATED");
 	
 	@Getter
 	private Integer id;

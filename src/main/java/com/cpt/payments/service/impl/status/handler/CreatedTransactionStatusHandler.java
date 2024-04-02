@@ -1,16 +1,15 @@
 package com.cpt.payments.service.impl.status.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.dao.TransactionDao;
 import com.cpt.payments.dao.TransactionLogDao;
 import com.cpt.payments.dto.Transaction;
-import com.cpt.payments.dto.TransactionLog;
 import com.cpt.payments.service.TransactionStatusHandler;
 
-@Service
+@Component
 public class CreatedTransactionStatusHandler extends TransactionStatusHandler {
 
 	    @Autowired
@@ -32,13 +31,9 @@ public class CreatedTransactionStatusHandler extends TransactionStatusHandler {
 			return false;
 		}
 
-		TransactionLog txnLog = TransactionLog.builder()
-				.transactionId(txnResponse.getId())
-				.txnFromStatus("-")
-				.txnToStatus(TransactionStatusEnum.CREATED.getName())
-				.build();
-		
-		transactionLogDao.createTransactionLog(txnLog);
+	   updateTxnLog(
+			   txnResponse.getId(),
+			   "_", TransactionStatusEnum.CREATED.getName());
 		
 		
 		System.out.println("Transaction save successfully");
