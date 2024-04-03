@@ -7,23 +7,31 @@ import org.springframework.stereotype.Component;
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.service.TransactionStatusHandler;
 import com.cpt.payments.service.impl.status.handler.CreatedTransactionStatusHandler;
+import com.cpt.payments.service.impl.status.handler.InitiatedTransactionStatusHandler;
+import com.cpt.payments.service.impl.status.handler.PendingTransactionStatusHandler;
 
 @Component
 public class TransactionStatusFactory {
 	
 	@Autowired
 	private ApplicationContext context;
-	
+
 	public TransactionStatusHandler getStatusHandler(TransactionStatusEnum transactionStatusEnum) {
-		
 		System.out.println(" fetching transaction status handler for -> "+transactionStatusEnum);
+		
 		switch(transactionStatusEnum) {
 		case CREATED:
 			return context.getBean(CreatedTransactionStatusHandler.class);
 		
+		case PENDING:
+			return context.getBean(PendingTransactionStatusHandler.class);
+			
+		case INITIATED:
+			return context.getBean(InitiatedTransactionStatusHandler.class);
+
 		default:
 			return null;
 		}
 	}
-
+	
 }
