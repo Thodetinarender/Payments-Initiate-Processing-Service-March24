@@ -17,6 +17,7 @@ import com.cpt.payments.dto.Transaction;
 import com.cpt.payments.pojo.PaymentResponse;
 import com.cpt.payments.pojo.ProcessingServiceRequest;
 import com.cpt.payments.pojo.TransactionReqRes;
+import com.cpt.payments.service.PaymentService;
 import com.cpt.payments.service.PaymentStatusService;
 import com.cpt.payments.util.LogMessage;
 import com.cpt.payments.util.TransactionMapper;
@@ -25,39 +26,43 @@ import com.cpt.payments.util.TransactionMapper;
 @RequestMapping(Endpoints.PAYMENTS)
 public class PaymentController {
 	private static final Logger LOGGER = LogManager.getLogger(PaymentController.class);
-	
-   @Autowired
-   TransactionMapper transactionMapper;
-    @Autowired
+
+	@Autowired
+	TransactionMapper transactionMapper;
+	@Autowired
 	PaymentStatusService paymentStatusService;
-    @Autowired
-    ModelMapper modelMapper;
-    
-    
+
+	@Autowired
+	PaymentService paymentService;
+
+	@Autowired
+	ModelMapper modelMapper;
+
+
 	@PostMapping(value = Endpoints.STATUS_UPDATE)
 	public ResponseEntity<TransactionReqRes> processPaymentStatus(
 			@RequestBody TransactionReqRes transactionReqRes) {
-		
-		
+
+
 		//Transaction texDTO =  modelMapper.map(transactionReqRes, Transaction.class);
 		//System.out.println(" payment request is -> " + transactionReqRes);
-		
+
 		LOGGER.debug(" payment request is -> " + transactionReqRes);
-		
+
 		Transaction transaction = transactionMapper.toDTO(transactionReqRes);
 		//System.out.println("Convaerted to textDTO:" + transaction);
 		LOGGER.info("Convaerted to textDTO:" + transaction);
-		
-         Transaction response = paymentStatusService.updatePaymentStatus(transaction);
-//        
+
+		Transaction response = paymentStatusService.updatePaymentStatus(transaction);
+		//        
 		TransactionReqRes responseObject = 
 				transactionMapper.toResponseObject(transaction);
 		return ResponseEntity.ok(responseObject);
-		
+
 		//return ResponseEntity.ok(transactionReqRes); 
-	
+
 	}
-	
+
 	@PostMapping(value = Endpoints.PROCESS_PAYMENT)
 	public ResponseEntity<PaymentResponse> processPayment(
 			@RequestBody ProcessingServiceRequest processingServiceRequest) {
@@ -65,16 +70,13 @@ public class PaymentController {
 		LogMessage.log(LOGGER, " processingServiceRequest is -> " + processingServiceRequest);
 
 		//PaymentResponse response = paymentService.processPayment(processingServiceRequest);
-		
+
 		ProcessPayment processPaymentDTO =  modelMapper.map(processingServiceRequest, ProcessPayment.class);
-		
-		ProcessPaymentResponse serviceeRespon = ProcessPaymentResponse.builder()
-				.paymentReference("ref")
-				.redirectUrl("http://redirect.s.com")
-				.build();	
-		
+
+		ProcessPaymentResponse serviceeRespon = paymentService.processPayment(processPaymentDTO);
+
 		PaymentResponse response = modelMapper.map(serviceeRespon, PaymentResponse.class);
-		
+
 		LogMessage.log(LOGGER, " processPayment response:" + response);
 		return ResponseEntity.ok(response);
 	}
