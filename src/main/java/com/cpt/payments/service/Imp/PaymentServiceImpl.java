@@ -21,7 +21,7 @@ import com.cpt.payments.util.LogMessage;
 public class PaymentServiceImpl implements PaymentService {
 
 	private static final Logger LOGGER = LogManager.getLogger(PaymentServiceImpl.class);
-
+	
 	@Autowired
 	private TransactionDao transactionDao;
 	
@@ -33,6 +33,7 @@ public class PaymentServiceImpl implements PaymentService {
 		
 		LogMessage.log(LOGGER, " running processPayment at service layer with ProcessPayment: " + ProcessPayment);
         
+		
 		
 		Transaction txn = transactionDao.getTransactionById(ProcessPayment.getTransactionId());
 	   

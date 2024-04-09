@@ -1,5 +1,7 @@
-package com.cpt.payments.dao;
+package com.cpt.payments.dao.impl;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -9,11 +11,15 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import com.cpt.payments.dao.TransactionDao;
 import com.cpt.payments.dto.Transaction;
+import com.cpt.payments.util.LogMessage;
 
 @Repository
 public class TransactionDaoImpl implements TransactionDao {
 
+	private static final Logger LOGGER = LogManager.getLogger(TransactionDaoImpl.class);
+	
 	@Autowired
 	private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -95,6 +101,25 @@ public class TransactionDaoImpl implements TransactionDao {
 	private String getTransactionById() {
 		StringBuilder queryBuilder = new StringBuilder("Select * from Transaction where id=:id ");
 		System.out.println(" " + "getTransactionById query -> " + queryBuilder);
+		return queryBuilder.toString();
+	}
+	
+	@Override
+	public void updateProviderReference(Transaction transaction) {
+		try {
+			jdbcTemplate.update(updateProviderReference(), new BeanPropertySqlParameterSource(transaction));
+		} catch (Exception e) {
+			LogMessage.log(LOGGER, "exception while updating TRANSACTION in DB :: " + transaction);
+			LogMessage.logException(LOGGER, e);
+		}
+
+	}
+
+	private String updateProviderReference() {
+		StringBuilder queryBuilder = new StringBuilder("Update Transaction ");
+		queryBuilder.append("SET providerReference=:providerReference ");
+		queryBuilder.append("WHERE id=:id ");
+		LogMessage.log(LOGGER, " " + "updateProviderReference query -> " + queryBuilder);
 		return queryBuilder.toString();
 	}
 

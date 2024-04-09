@@ -22,47 +22,53 @@ import com.cpt.payments.service.PaymentStatusService;
 import com.cpt.payments.util.LogMessage;
 import com.cpt.payments.util.TransactionMapper;
 
+
 @RestController
 @RequestMapping(Endpoints.PAYMENTS)
 public class PaymentController {
-	private static final Logger LOGGER = LogManager.getLogger(PaymentController.class);
 
+	private static final Logger LOGGER = LogManager.getLogger(PaymentController.class);
+	
 	@Autowired
 	TransactionMapper transactionMapper;
+	
 	@Autowired
 	PaymentStatusService paymentStatusService;
-
+	
 	@Autowired
 	PaymentService paymentService;
-
+	
 	@Autowired
 	ModelMapper modelMapper;
-
 
 	@PostMapping(value = Endpoints.STATUS_UPDATE)
 	public ResponseEntity<TransactionReqRes> processPaymentStatus(
 			@RequestBody TransactionReqRes transactionReqRes) {
 
-
-		//Transaction texDTO =  modelMapper.map(transactionReqRes, Transaction.class);
-		//System.out.println(" payment request is -> " + transactionReqRes);
-
+		System.out.println(" payment request is -> " + transactionReqRes);
+		
+		
+		LOGGER.trace(" payment request is -> " + transactionReqRes);
 		LOGGER.debug(" payment request is -> " + transactionReqRes);
+		LOGGER.info(" payment request is -> " + transactionReqRes);
+		LOGGER.warn(" payment request is -> " + transactionReqRes);
+		LOGGER.error(" payment request is -> " + transactionReqRes);
+		LOGGER.fatal(" payment request is -> " + transactionReqRes);
+		
 
 		Transaction transaction = transactionMapper.toDTO(transactionReqRes);
-		//System.out.println("Convaerted to textDTO:" + transaction);
-		LOGGER.info("Convaerted to textDTO:" + transaction);
+		
+		System.out.println("Converted to txnDTO:" + transaction);
+		LOGGER.info("Converted to txnDTO:" + transaction);
 
 		Transaction response = paymentStatusService.updatePaymentStatus(transaction);
-		//        
-		TransactionReqRes responseObject = 
-				transactionMapper.toResponseObject(transaction);
+
+		TransactionReqRes responseObject =
+				transactionMapper.toResponseObject(response);
+
 		return ResponseEntity.ok(responseObject);
-
-		//return ResponseEntity.ok(transactionReqRes); 
-
 	}
-
+	
 	@PostMapping(value = Endpoints.PROCESS_PAYMENT)
 	public ResponseEntity<PaymentResponse> processPayment(
 			@RequestBody ProcessingServiceRequest processingServiceRequest) {
@@ -70,15 +76,16 @@ public class PaymentController {
 		LogMessage.log(LOGGER, " processingServiceRequest is -> " + processingServiceRequest);
 
 		//PaymentResponse response = paymentService.processPayment(processingServiceRequest);
-
-		ProcessPayment processPaymentDTO =  modelMapper.map(processingServiceRequest, ProcessPayment.class);
-
-		ProcessPaymentResponse serviceeRespon = paymentService.processPayment(processPaymentDTO);
-
-		PaymentResponse response = modelMapper.map(serviceeRespon, PaymentResponse.class);
-
+		
+		ProcessPayment processPaymentDTO = modelMapper.map(processingServiceRequest, ProcessPayment.class);
+		
+		ProcessPaymentResponse serviceRespon = paymentService.processPayment(processPaymentDTO);
+		
+		PaymentResponse response = modelMapper.map(serviceRespon, PaymentResponse.class);
+		
 		LogMessage.log(LOGGER, " processPayment response:" + response);
 		return ResponseEntity.ok(response);
 	}
+
 
 }

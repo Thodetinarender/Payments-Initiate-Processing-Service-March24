@@ -8,6 +8,8 @@ public interface TransactionDao {
 	public boolean updateTransaction(Transaction transaction);
 
 	public Transaction getTransactionById(long transactionId);
+	
+	public void updateProviderReference(Transaction transaction);
 
 
 }
