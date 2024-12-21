@@ -1,8 +1,12 @@
 package com.cpt.payments.service.Imp;
 
+import java.util.List;
+import java.util.concurrent.Executor;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +31,14 @@ public class PaymentServiceImpl implements PaymentService {
 	
 	@Autowired
 	private ProviderHandlerFactory providerHandlerFactory;
+	
+	
+	@Autowired
+	@Qualifier("asyncPaymentDetailsExecutor")
+	private Executor asyncPaymentDetailsExecutor;
+
 	@Override
 	public ProcessPaymentResponse processPayment(ProcessPayment ProcessPayment) {
-		// TODO Auto-generated method stub
 		
 		LogMessage.log(LOGGER, " running processPayment at service layer with ProcessPayment: " + ProcessPayment);
         
@@ -64,6 +73,43 @@ public class PaymentServiceImpl implements PaymentService {
 		LogMessage.log(LOGGER, "Got response from ProviderHandler || serviceeRespon:" + serviceeResponse);
 		
 		return serviceeResponse;
+	}
+	@Override
+	public void processGetPaymentDetails() {
+
+		try {
+		List<Transaction> transactionList = transactionDao.fetchAllTransactionsForReconcilation();
+		LogMessage.debug(LOGGER, "	Loaded transactions for reconcilation count: " + transactionList.size());
+		
+
+		if(null != transactionList) {
+			for(Transaction tr : transactionList) {
+				asyncPaymentDetailsExecutor.execute(new Runnable() {
+
+					@Override
+					public void run() {
+						ProviderHandler providerHandler = providerHandlerFactory.getProviderHandler(tr.getProviderId());
+						LogMessage.log(LOGGER, "providerHandler is -> " + providerHandler);
+						if (null == providerHandler) {
+							LogMessage.log(LOGGER, "provider not found -> " + tr.getProviderId());
+							throw new PaymentProcessingException(HttpStatus.BAD_REQUEST, ErrorCodeEnum.PROVIDER_NOT_FOUND.getErrorCode(),
+									ErrorCodeEnum.PROVIDER_NOT_FOUND.getErrorMessage());
+						}
+
+						providerHandler.processGetPaymentDetails(tr);
+
+					}
+				});
+
+			}
+		}
+	} catch (Exception e) {
+		LogMessage.log(LOGGER, "exception while processing get payment details -> " + e.getMessage());
+		LogMessage.logException(LOGGER, e);
+	}
+
+	
+
 	}
 
 

@@ -1,5 +1,8 @@
 package com.cpt.payments.dao.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +123,76 @@ public class TransactionDaoImpl implements TransactionDao {
 		queryBuilder.append("SET providerReference=:providerReference ");
 		queryBuilder.append("WHERE id=:id ");
 		LogMessage.log(LOGGER, " " + "updateProviderReference query -> " + queryBuilder);
+		return queryBuilder.toString();
+	}
+
+	@Override
+	public Transaction getTransactionByProviderReference(String paymentId) {
+		LogMessage.log(LOGGER, " :: fetching Transaction Details  for provider reference :: " + paymentId);
+
+		Transaction transaction = null;
+		try {
+			transaction = jdbcTemplate.queryForObject(getTransactionByProviderReference(),
+					new BeanPropertySqlParameterSource(Transaction.builder().providerReference(paymentId).build()),
+					new BeanPropertyRowMapper<>(Transaction.class));
+			LogMessage.log(LOGGER, " :: transaction Details from DB  = " + transaction);
+		} catch (Exception e) {
+			LogMessage.log(LOGGER, "unable to get transaction Details " + e);
+			LogMessage.logException(LOGGER, e);
+		}
+		return transaction;
+	}
+
+	private String getTransactionByProviderReference() {
+		StringBuilder queryBuilder = new StringBuilder(
+				"Select * from Transaction where providerReference=:providerReference ");
+		LogMessage.log(LOGGER, "getTransactionByProviderReference query -> " + queryBuilder);
+		return queryBuilder.toString();
+	}
+	
+	
+	@Override
+	public List<Transaction> fetchAllTransactionsForReconcilation() {
+		LogMessage.log(LOGGER, " :: fetching Transaction Details  for retry :: ");
+
+		List<Transaction> transaction = new ArrayList<>();
+		try {
+			transaction = jdbcTemplate.query(fetchTransactionsForReconcilation(),
+					new BeanPropertySqlParameterSource(Transaction.builder().build()),
+					new BeanPropertyRowMapper<>(Transaction.class));
+			LogMessage.log(LOGGER, " :: transaction Details from DB  = " + transaction);
+		} catch (Exception e) {
+			LogMessage.log(LOGGER, "unable to get transaction Details " + e);
+			LogMessage.logException(LOGGER, e);
+		}
+		return transaction;
+	}
+
+	private String fetchTransactionsForReconcilation() {
+		StringBuilder queryBuilder = new StringBuilder("select * from Transaction ");
+		queryBuilder.append("where retryCount < 3 and txnStatusId =2");
+		
+		LogMessage.log(LOGGER, " " + "fetchTransactionsForReconcilation query -> " + queryBuilder);
+		return queryBuilder.toString();
+	}
+
+	@Override
+	public void updateRetryCount(Transaction transaction) {
+		try {
+			transaction.setRetryCount(transaction.getRetryCount()+1);
+			jdbcTemplate.update(updateRetryCountQuery(), new BeanPropertySqlParameterSource(transaction));
+		} catch (Exception e) {
+			LogMessage.log(LOGGER, "exception while updating TRANSACTION in DB :: " + transaction);
+			LogMessage.logException(LOGGER, e);
+		}
+
+	}
+
+	private String updateRetryCountQuery() {
+		StringBuilder queryBuilder = new StringBuilder("Update Transaction ");
+		queryBuilder.append("SET retryCount=:retryCount ");
+		queryBuilder.append("WHERE id=:id ");
+		LogMessage.log(LOGGER, " " + "updateProviderCodeAndMessage query -> " + queryBuilder);
 		return queryBuilder.toString();
 	}
 

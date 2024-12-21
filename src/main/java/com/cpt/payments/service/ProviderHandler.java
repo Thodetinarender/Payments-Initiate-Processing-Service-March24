@@ -8,4 +8,5 @@ public interface ProviderHandler {
 
 	ProcessPaymentResponse processPayment(Transaction transaction, ProcessPayment processPayment);
 
+	void processGetPaymentDetails(Transaction transaction);
 }

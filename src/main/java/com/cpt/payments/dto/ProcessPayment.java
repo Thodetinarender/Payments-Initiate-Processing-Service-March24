@@ -17,6 +17,6 @@ public class ProcessPayment {
 	private String productDescription;
 	private String successUrl; 
 	private Long quantity;
-	private String cancleUrl;
+	private String cancelUrl;
 	
 }

@@ -28,10 +28,18 @@ import com.google.gson.Gson;
 
 @Service
 public class StripeProviderHandler implements ProviderHandler {
+	private static final int MAX_RETRY_ATTEMPT = 3;
+
 	private static final Logger LOGGER = LogManager.getLogger(StripeProviderHandler.class);
 
 	@Value("${stripe.provider.service.process.payment}")
 	private String processPaymentUrl;
+		
+	@Value("${stripe.provider.service.get.payment.details}")
+	private String getPaymentDetailsUrl;
+	
+	@Value("${stripe.provider.service.get.payment.expire}")
+	private String expirePaymentUrl;
 
 	@Autowired
 	private HttpRestTemplateEngine httpRestTemplateEngine;
@@ -55,7 +63,7 @@ public class StripeProviderHandler implements ProviderHandler {
 				.quantity(processingServiceRequest.getQuantity())
 				.productDescription(processingServiceRequest.getProductDescription())
 				.successUrl(processingServiceRequest.getSuccessUrl())
-				.cancleUrl(processingServiceRequest.getCancleUrl())
+				.cancelUrl(processingServiceRequest.getCancelUrl())
 				.build();
 
 		LogMessage.log(LOGGER, " stripe provider request -> " + stripeProviderRequest);
@@ -187,4 +195,64 @@ public class StripeProviderHandler implements ProviderHandler {
 		paymentStatusService.updatePaymentStatus(transaction);
 	}
 
+	@Override
+	public void processGetPaymentDetails(Transaction transaction) {
+		LogMessage.log(LOGGER, " stripe provider request -> " + transaction);
+		Gson gson = new Gson();
+		
+		if(null == transaction.getProviderReference() || transaction.getProviderReference().isBlank()) {
+			LogMessage.log(LOGGER, "Failing transaction beacuse we do not have provider reference --> "+transaction.getTxnReference());
+			transaction.setTxnStatusId(TransactionStatusEnum.FAILED.getId());
+			paymentStatusService.updatePaymentStatus(transaction);
+		}
+		
+		transactionDao.updateRetryCount(transaction);
+		HttpRequest httpRequest = HttpRequest.builder().httpMethod(HttpMethod.POST)
+				.request(gson.toJson(transaction)).url(getPaymentDetailsUrl).build();
+
+		LogMessage.log(LOGGER, " updating transaction status to pending ");
+
+		ResponseEntity<String> response = httpRestTemplateEngine.execute(httpRequest);
+		if (null == response || null == response.getBody()) {//Failed to make API call
+			LogMessage.log(LOGGER, " payment creation at provider failed -> " + response);
+			throw new PaymentProcessingException(HttpStatus.INTERNAL_SERVER_ERROR,
+					ErrorCodeEnum.FAILED_TO_CREATE_TRANSACTION.getErrorCode(),
+					ErrorCodeEnum.FAILED_TO_CREATE_TRANSACTION.getErrorMessage());
+		}
+		
+		if(200 == response.getStatusCode().value()) {
+			transaction = paymentStatusService.updatePaymentStatus(
+					gson.fromJson(response.getBody(), Transaction.class));
+		}
+		
+		//APPROVED return
+		
+		if(transaction.getTxnStatusId().equals(TransactionStatusEnum.PENDING.getId()) 
+				&& transaction.getRetryCount() >= MAX_RETRY_ATTEMPT) {
+			//Expire API call
+			expireTransaction(transaction, gson);
+			
+		}
+		
+	}
+
+	private void expireTransaction(Transaction transaction, Gson gson) {
+		HttpRequest httpRequest = HttpRequest.builder().httpMethod(HttpMethod.POST)
+				.request(gson.toJson(transaction)).url(expirePaymentUrl).build();
+
+		LogMessage.log(LOGGER, " invoking expire API ProviderReference:" + transaction.getProviderReference());
+
+		ResponseEntity<String> response = httpRestTemplateEngine.execute(httpRequest);
+		if (null == response || null == response.getBody()) {//Failed to make API call
+			LogMessage.log(LOGGER, " expire call at provider failed -> " + response);
+			throw new PaymentProcessingException(HttpStatus.INTERNAL_SERVER_ERROR,
+					ErrorCodeEnum.FAILED_TO_CREATE_TRANSACTION.getErrorCode(),
+					ErrorCodeEnum.FAILED_TO_CREATE_TRANSACTION.getErrorMessage());
+		}
+		
+		if(200 == response.getStatusCode().value()) {
+			paymentStatusService.updatePaymentStatus(
+					gson.fromJson(response.getBody(), Transaction.class));
+		}
+	} 
 }

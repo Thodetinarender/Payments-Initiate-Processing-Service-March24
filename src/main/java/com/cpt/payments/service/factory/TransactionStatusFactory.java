@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.service.TransactionStatusHandler;
+import com.cpt.payments.service.impl.status.handler.ApprovedTransactionStatusHandler;
 import com.cpt.payments.service.impl.status.handler.CreatedTransactionStatusHandler;
+import com.cpt.payments.service.impl.status.handler.FailedTransactionStatusHandler;
 import com.cpt.payments.service.impl.status.handler.InitiatedTransactionStatusHandler;
 import com.cpt.payments.service.impl.status.handler.PendingTransactionStatusHandler;
 
@@ -28,6 +30,12 @@ public class TransactionStatusFactory {
 			
 		case INITIATED:
 			return context.getBean(InitiatedTransactionStatusHandler.class);
+			
+		case FAILED:
+			return context.getBean(FailedTransactionStatusHandler.class);
+			
+		case APPROVED:
+			return context.getBean(ApprovedTransactionStatusHandler.class);
 
 		default:
 			return null;

@@ -18,6 +18,6 @@ public class StripeProviderRequest {
 	private Long quantity;
 	private String productDescription;
 	private String successUrl;
-	private String cancleUrl;
+	private String cancelUrl;
 
 }

@@ -5,6 +5,9 @@ public class Endpoints {
 	public static final String STATUS_UPDATE = "/status";
     public static final String PROCESS_PAYMENT = "/process";
     
+    public static final String TEST_PAYMENT = "/test";
+
+    
 //	public static final String TRUSTLY = "/trustly";
 //	public static final String STRIPE = "/stripe";
 //	public static final String NOTIFICATION = "/notification";

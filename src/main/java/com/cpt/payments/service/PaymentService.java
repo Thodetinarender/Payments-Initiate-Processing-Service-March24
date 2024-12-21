@@ -7,5 +7,5 @@ public interface PaymentService {
 
 	ProcessPaymentResponse processPayment(ProcessPayment ProcessPayment);
 	
-	//void processGetPaymentDetails();
+	void processGetPaymentDetails();
 }
